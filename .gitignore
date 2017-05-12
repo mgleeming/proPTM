@@ -1,0 +1,13 @@
+*.dat
+*.pyc
+*.mzML
+*.out
+*.png
+*.DS_Store
+*.py~
+build/
+develop-eggs/
+eggs/
+.eggs/
+dist/
+xenophile.egg-info/
