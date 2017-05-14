@@ -20,7 +20,7 @@ class Protein (object):
             pass # get PDB file
         self.minLength = minLength
         self.peptides = []
-        self.modifications = []
+        self.modifications ={}
         return
 
     def digest(self, missedCleavages = 0, charges = [1,2,3]):
@@ -34,16 +34,19 @@ class Protein (object):
                 )
         return
 
-    def applyModification(self, newMod):
-        if isinstance(newMod, Modification):
-            self.modifications.append(newMod)
+    def applyModification(self, newMod, rank):
+
+        assert rank > 0
+
+        if isinstance(newMod, Modification) and rank not in self.modifications:
+            self.modifications[rank] = newMod
         else:
-            print 'First create Modification instance'
+           raise Exception('Modification instance required')
         return
 
     def getModifications(self):
-        for i in range(len(self.modifications)):
-            print self.modifications[i]
+        for k, v in self.modifications.iteritems():
+            print k, v
         return
 
 
@@ -65,10 +68,23 @@ class Peptide (object):
     def getModifiedMass(self):
         # get list of modifications in peptides
         totalModsMass = 0
+        self.modString = []
         for i in range(len(self.sequence)):
-            for m in self.proteinModifications:
-                if self.sequence[i].upper() in m.reactiveResidues:
-                    totalModsMass += m.netMassChange
+            # dict keys are mod ranks - move through k/v's w/ higherst rnak first
+            # first match is highest rank
+            foundMod = False
+            for j in range(len(self.proteinModifications)):
+                j += 1
+                try:
+                    if self.sequence[i].upper() in self.proteinModifications[j].reactiveResidues:
+                        totalModsMass += self.proteinModifications[j].netMassChange
+                        self.modString.append(j)
+                        foundMod = True
+                except KeyError:
+                    print 'Warning: modification dict key error'
+            if not foundMod:
+                self.modString.append(0)
+
         return totalModsMass + self.nativeMass
 
     def getPseudoMolecularIons(self):
